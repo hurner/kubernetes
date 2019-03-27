@@ -101,7 +101,7 @@ spec:
   - metadata:
       name: prometheus-data
     spec:
-      storageClassName: standard
+      storageClassName: managed-nfs-storage
       accessModes:
         - ReadWriteOnce
       resources:
