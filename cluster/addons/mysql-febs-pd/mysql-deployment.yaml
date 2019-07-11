@@ -1,0 +1,89 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: feb-mysql
+  labels:
+    app: feb
+spec:
+  ports:
+    - port: 3306
+      targetPort: mysql
+  selector:
+    app: feb
+    tier: mysql
+  clusterIP: None
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mysql-pv-claim
+  labels:
+    app: feb
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 2Gi
+---
+apiVersion: apps/v1 # for k8s versions before 1.9.0 use apps/v1beta2  and before 1.8.0 use extensions/v1beta1
+kind: Deployment
+metadata:
+  name: feb-mysql
+  labels:
+    app: feb
+spec:
+  selector:
+    matchLabels:
+      app: feb
+      tier: mysql
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: feb
+        tier: mysql
+    spec:
+      containers:
+      - image: mysql:5.7
+        name: mysql
+        env:
+        - name: MYSQL_DATABASE
+          valueFrom:
+            configMapKeyRef:
+              name: febs-configmap
+              key: mysql-db
+        - name: MYSQL_USER
+          valueFrom:
+            secretKeyRef:
+              name: febs-secret
+              key: mysql-username
+        - name: MYSQL_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: febs-secret
+              key: mysql-password
+        - name: MYSQL_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: febs-secret
+              key: mysql-root-password
+        livenessProbe:
+          tcpSocket:
+            port: 3306
+        ports:
+        - containerPort: 3306
+          name: mysql
+        volumeMounts:
+        - name: mysql-persistent-storage
+          mountPath: /var/lib/mysql
+        - name: mysql-init
+          mountPath: /docker-entrypoint-initdb.d
+      volumes:
+      - name: mysql-persistent-storage
+        persistentVolumeClaim:
+          claimName: mysql-pv-claim
+      - name: mysql-init
+        configMap:
+          name: febs-configmap-init-sql

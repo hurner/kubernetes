@@ -1,0 +1,60 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: feb-redis
+spec:
+  ports:
+   - port: 6379
+     targetPort: redis
+     nodePort: 30379
+  selector:
+    app: feb
+    tier: redis
+  type: NodePort
+---
+apiVersion: apps/v1 
+kind: Deployment
+metadata:
+  name: feb-redis
+  labels:
+    app: feb
+spec:
+  selector:
+    matchLabels:
+      app: feb
+      tier: redis
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: feb
+        tier: redis
+    spec:
+      containers:
+      - name: redis
+        image: redis
+        env:
+        - name: SENTINEL_PASSWORD
+          value: "123456"
+        resources:
+          requests:
+            cpu: 100m              #限制cpu的数量为0.1个
+            memory: 100Mi      #限制内存为100M
+        volumeMounts:
+        - name: redis-conf
+          mountPath: "/usr/local/etc"
+        command:
+          - "redis-server"
+        args:
+          - "/usr/local/etc/redis/redis.conf"
+        ports:
+        - containerPort: 6379
+          name: redis
+      volumes:
+      - name: redis-conf
+        configMap:
+          name: febs-configmap-redis
+          items:
+            - key: redis.conf
+              path: redis/redis.conf
