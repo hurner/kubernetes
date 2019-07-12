@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: febs-configmap-init-sql
+  name: febs-configmap-sql-init
 data:
   "febs.sql": |-
     DROP TABLE IF EXISTS QRTZ_FIRED_TRIGGERS;

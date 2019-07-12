@@ -80,10 +80,15 @@ spec:
           mountPath: /var/lib/mysql
         - name: mysql-init
           mountPath: /docker-entrypoint-initdb.d
+        - name: mysql-conf
+          mountPath: /etc/mysql/conf.d
       volumes:
       - name: mysql-persistent-storage
         persistentVolumeClaim:
           claimName: mysql-pv-claim
       - name: mysql-init
         configMap:
-          name: febs-configmap-init-sql
+          name: febs-configmap-sql-init
+      - name: mysql-conf
+        configMap:
+          name: febs-configmap-sql-conf
