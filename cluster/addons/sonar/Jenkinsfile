@@ -1,0 +1,47 @@
+pipeline {
+    agent any
+    environment {
+        // HARBOR_CREDS = credentials('jenkins-harbor-creds')
+        K8S_CONFIG = credentials('jenkins-k8s-config-secret')
+        //GIT_TAG = sh(returnStdout: true,script: 'git describe --tags').trim()
+        GIT_TAG = sh(returnStdout: true,script: 'git rev-parse --short HEAD').trim()
+        // GIT_TAG = '0417-3'
+    }
+    parameters {
+        string(name: 'REGISTRY_HOST', defaultValue: '192.168.0.205:5000', description: '镜像仓库地址')
+//        string(name: 'DOCKER_IMAGE', defaultValue: 'tssp/pipeline-demo', description: 'docker镜像名')
+        string(name: 'APP_NAME', defaultValue: 'kettle-webapp', description: 'k8s应用名')
+        string(name: 'K8S_NAMESPACE', defaultValue: 'sonarqube', description: 'k8s的namespace名称')
+        string(name: 'TEST_SERVER_ADDR', defaultValue: 'http://192.168.1.4:8203/', description: 'dist文件夹中测试服务器地址，需更换为K8S ingress地址')
+        string(name: 'K8S_INGRESS', defaultValue: 'http://39.97.201.63/feb/', description: 'k8s的ingress地址')
+    }
+    stages {
+
+        stage('K8S Deploy') {
+            when { 
+                allOf {
+                    expression { env.GIT_TAG != null }
+                }
+            }
+            agent {
+                docker {
+                    image 'lwolf/helm-kubectl-docker'
+                }
+            }
+            steps {
+                dir('./'){
+                    script {
+
+                        sh "mkdir -p ~/.kube"
+                        sh "echo ${K8S_CONFIG} | base64 -d > ~/.kube/config"
+
+                        sh "kubectl apply -f . -n ${params.K8S_NAMESPACE}"
+                    }
+                    
+                }
+            }
+            
+        }
+        
+    }
+}

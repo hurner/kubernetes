@@ -1,0 +1,96 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: kompose convert
+    kompose.version: 1.21.0 ()
+  creationTimestamp: null
+  labels:
+    io.kompose.service: davinci
+  name: davinci
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: davinci
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert
+        kompose.version: 1.21.0 ()
+      creationTimestamp: null
+      labels:
+        io.kompose.service: davinci
+    spec:
+      containers:
+      - args:
+        - ./bin/docker-entrypoint.sh
+        - mysql:3306
+        - --
+        - start-server.sh
+        env:
+        - name: SCREENSHOT_DEFAULT_BROWSER
+          value: CHROME
+        - name: SCREENSHOT_REMOTE_WEBDRIVER_URL
+          value: http://chrome:4444/wd/hub
+        - name: SCREENSHOT_TIMEOUT_SECOND
+          value: "15"
+        - name: SERVER_ADDRESS
+          value: 0.0.0.0
+        - name: SPRING_DATASOURCE_PASSWORD
+          value: abc123123
+        - name: SPRING_DATASOURCE_TEST_ON_BORROW
+          value: "true"
+        - name: SPRING_DATASOURCE_TIME_BETWEEN_EVICTION_RUNS_MILLIS
+          value: "6000"
+        - name: SPRING_DATASOURCE_URL
+          value: jdbc:mysql://mysql:3306/davinci0.3?useUnicode=true&characterEncoding=UTF-8&zeroDateTimeBehavior=convertToNull&allowMultiQueries=true
+        - name: SPRING_DATASOURCE_USERNAME
+          value: root
+        - name: SPRING_MAIL_HOST
+          value: smtp.163.com
+        - name: SPRING_MAIL_NICKNAME
+          value: davinci
+        - name: SPRING_MAIL_PASSWORD
+          value: wtm9807
+        - name: SPRING_MAIL_PORT
+          value: "465"
+        - name: SPRING_MAIL_PROPERTIES_MAIL_SMTP_SSL_ENABLE
+          value: "true"
+        - name: SPRING_MAIL_USERNAME
+          value: hurner@163.com
+        - name: TIME_ZONE
+          value: Asia/Shanghai
+        image: edp963/davinci:v0.3.0-beta.9
+        imagePullPolicy: ""
+        name: davinci
+        resources:
+          requests:
+          #  cpu: "200m"
+            memory: "512Mi"
+          limits:
+          #  cpu: "500m"
+            memory: "1024Mi"
+        ports:
+        - containerPort: 8080
+        resources: {}
+        volumeMounts:
+        # - mountPath: /opt/davinci/logs
+        #   name: davinci-logs
+        # - mountPath: /opt/davinci/userfiles
+        #   name: davinci-userfiles
+        - mountPath: /initdb
+          name: davinci-initdb
+      restartPolicy: Always
+      serviceAccountName: ""
+      volumes:
+      - name: davinci-logs
+        emptyDir: {}
+      - name: davinci-userfiles
+        emptyDir: {}
+      - name: davinci-initdb
+        persistentVolumeClaim:
+          claimName: davinci-initdb
+status: {}
