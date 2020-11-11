@@ -7,7 +7,7 @@ metadata:
     kubernetes.io/cluster-service: "true"
     addonmanager.kubernetes.io/mode: EnsureExists
 spec:
-  storageClassName: managed-nfs-storage
+  storageClassName: alicloud-nas
   accessModes:
     - ReadWriteOnce
   resources:

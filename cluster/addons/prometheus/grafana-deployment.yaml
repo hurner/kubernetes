@@ -1,4 +1,18 @@
-apiVersion: extensions/v1beta1
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: grafana-pvc
+  labels:
+    app: grafana
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+  storageClassName: alicloud-nas
+---
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
@@ -42,5 +56,6 @@ spec:
       securityContext: {}
       terminationGracePeriodSeconds: 30
       volumes:
-      - emptyDir: {}
-        name: data
+      - name: data
+        persistentVolumeClaim:
+          claimName: grafana-pvc
